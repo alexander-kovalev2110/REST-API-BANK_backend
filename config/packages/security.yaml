@@ -1,0 +1,33 @@
+security:
+  password_hashers:
+    Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+
+  providers:
+    app_user_provider:
+      entity:
+        class: App\Entity\Customer
+        property: name
+
+  firewalls:
+    dev:
+      pattern: ^/(_(profiler|wdt)|css|images|js)/
+      security: false
+
+    # ✅ Логин (ручной через контроллер)
+    login:
+      pattern: ^/customer/login
+      stateless: true
+      security: false  # потому что авторизация не требуется
+
+    # ✅ Основной firewall для JWT
+    main:
+      pattern: ^/(customer|transaction)
+      stateless: true
+      provider: app_user_provider
+      jwt: ~  # обработка Authorization: Bearer <token>
+      entry_point: jwt  # важно для новых версий Symfony
+      # entry_point: lexik_jwt_authentication.jwt_token_authenticator
+
+  access_control:
+    - { path: ^/customer/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+    - { path: ^/transaction, roles: ROLE_USER }

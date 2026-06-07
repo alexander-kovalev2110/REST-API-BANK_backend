@@ -1,0 +1,27 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude: '../src/{DependencyInjection,Entity,Tests,Kernel.php}'
+
+    App\Service\:
+        resource: '../src/Service/'
+        tags: ['controller.service_arguments']
+    
+    App\Service\ValidatorService:
+        arguments:
+            $validator: '@validator'
+
+    App\EventListener\ApiExceptionListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }    
+
+    App\ArgumentResolver\FilterTransactionRequestResolver:
+        tags: ['controller.argument_value_resolver']
+
+    App\ArgumentResolver\CustomerValueResolver:
+        tags:
+            - { name: controller.argument_value_resolver, priority: 50 }
