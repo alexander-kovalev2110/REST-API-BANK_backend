@@ -2,7 +2,7 @@
 
 namespace App\EventListener;
 
-use App\Domain\Exception\DomainException;
+use App\Exception\DomainException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 

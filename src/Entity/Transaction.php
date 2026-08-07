@@ -12,10 +12,10 @@ class Transaction
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private $id;
+    private ?int $id = null;
 
     #[ORM\Column(type: 'float')]
-    private $amount;
+    private ?float $amount = null;
 
     // #[ORM\Column(type: 'date')]
     // private $date;
@@ -26,7 +26,7 @@ class Transaction
 
     #[ORM\ManyToOne(targetEntity: Customer::class)]
     #[ORM\JoinColumn(nullable: false)]
-    private $customer;
+    private ?Customer $customer = null;
 
     public function getId(): ?int
     {

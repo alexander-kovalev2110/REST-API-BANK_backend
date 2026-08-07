@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Exception;
+namespace App\Exception;
 
 final class CustomerAlreadyExistsException extends DomainException
 {

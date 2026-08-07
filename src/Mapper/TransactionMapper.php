@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Service;
+namespace App\Mapper;
 
 use App\Entity\Transaction;
-use App\DTO\TransactionResponse;
+use App\DTO\Response\TransactionResponse;
 
 final class TransactionMapper
 {

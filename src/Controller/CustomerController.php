@@ -2,9 +2,9 @@
 
 namespace App\Controller;
 
-use App\DTO\RegisterRequest;
-use App\DTO\LoginRequest;
-use App\DTO\AuthResponse;
+use App\DTO\Request\RegisterRequest;
+use App\DTO\Request\LoginRequest;
+use App\DTO\Response\AuthResponse;
 use App\Service\CustomerService;
 use App\Service\TokenService;
 use App\Service\ValidatorService;
@@ -24,7 +24,7 @@ class CustomerController extends AbstractController
         private readonly SerializerInterface $serializer,
     ) {}
 
-    // REGESTERING A NEW CLIENT
+    // REGISTERING A NEW CLIENT
     #[Route('/customers/register', name: 'create_customer', methods: ['POST'])]
     public function createCustomer(Request $request): JsonResponse
     {

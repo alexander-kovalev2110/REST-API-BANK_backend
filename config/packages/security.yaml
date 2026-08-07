@@ -13,15 +13,15 @@ security:
       pattern: ^/(_(profiler|wdt)|css|images|js)/
       security: false
 
-    # ✅ Логин (ручной через контроллер)
+    # ✅ Логин и Регистрация (ручной через контроллер)
     login:
-      pattern: ^/customer/login
+      pattern: ^/customers/(login|register)
       stateless: true
       security: false  # потому что авторизация не требуется
 
     # ✅ Основной firewall для JWT
     main:
-      pattern: ^/(customer|transaction)
+      pattern: ^/(customers|transactions)
       stateless: true
       provider: app_user_provider
       jwt: ~  # обработка Authorization: Bearer <token>
@@ -29,5 +29,5 @@ security:
       # entry_point: lexik_jwt_authentication.jwt_token_authenticator
 
   access_control:
-    - { path: ^/customer/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-    - { path: ^/transaction, roles: ROLE_USER }
+    - { path: ^/customers/(login|register), roles: PUBLIC_ACCESS }
+    - { path: ^/transactions, roles: ROLE_USER }

@@ -3,13 +3,13 @@ namespace App\Service;
 
 use App\Entity\Customer;
 use App\Entity\Transaction;
-use App\DTO\TransactionResponse;
-use App\DTO\TransactionListResponse;
-use App\DTO\FilterTransactionRequest;
+use App\DTO\Response\TransactionResponse;
+use App\DTO\Response\TransactionListResponse;
+use App\DTO\Request\FilterTransactionRequest;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\TransactionRepository;
-use App\Service\TransactionMapper;
-use App\Domain\Exception\TransactionNotFoundException;
+use App\Mapper\TransactionMapper;
+use App\Exception\TransactionNotFoundException;
 
 class TransactionService 
 {

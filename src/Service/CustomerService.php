@@ -3,14 +3,14 @@
 namespace App\Service;
 
 use App\Entity\Customer;
-use App\DTO\RegisterRequest;
-use App\DTO\LoginRequest;
+use App\DTO\Request\RegisterRequest;
+use App\DTO\Request\LoginRequest;
 use App\Repository\CustomerRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use App\Domain\Exception\CustomerAlreadyExistsException;
-use App\Domain\Exception\CustomerNotFoundException;
-use App\Domain\Exception\InvalidCredentialsException;
+use App\Exception\CustomerAlreadyExistsException;
+use App\Exception\CustomerNotFoundException;
+use App\Exception\InvalidCredentialsException;
 
 class CustomerService
 {
@@ -20,7 +20,7 @@ class CustomerService
         private readonly CustomerRepository $customerRepo,
     ) {}
 
-    // REGESTERING A NEW CLIENT
+    // REGISTERING A NEW CLIENT
     public function create(RegisterRequest $dto): Customer
     {
         // Check for existence

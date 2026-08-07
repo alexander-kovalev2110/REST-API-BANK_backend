@@ -9,8 +9,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-use App\DTO\AmountTransactionRequest;
-use App\DTO\FilterTransactionRequest;
+use App\DTO\Request\AmountTransactionRequest;
+use App\DTO\Request\FilterTransactionRequest;
 use App\Service\TransactionService;
 use App\Service\ValidatorService;
 
