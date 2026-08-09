@@ -5,7 +5,7 @@ security:
   providers:
     app_user_provider:
       entity:
-        class: App\Entity\Customer
+        class: App\Domain\Customer\Customer
         property: name
 
   firewalls:

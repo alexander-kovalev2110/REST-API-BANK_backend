@@ -1,0 +1,69 @@
+<?php
+
+namespace App\Domain\Customer;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+
+#[ORM\Entity]
+#[ORM\Table(name: "customers")]
+class Customer implements UserInterface, PasswordAuthenticatedUserInterface
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    private ?int $id = null;
+
+    #[ORM\Column(type: 'string', length: 255, unique: true)]
+    private ?string $name = null;
+
+    #[ORM\Column(name: 'pw', type: 'string', length: 255)]
+    private ?string $pw = null;
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getCustomerId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    public function getPassword(): string
+    {
+        return $this->pw;
+    }
+
+    public function setPassword(string $password): self
+    {
+        $this->pw = $password;
+        return $this;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->name;
+    }
+
+    public function getRoles(): array
+    {
+        return ['ROLE_USER'];
+    }
+
+    public function eraseCredentials(): void
+    {
+    }
+}

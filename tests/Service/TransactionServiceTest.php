@@ -2,32 +2,49 @@
 
 namespace App\Tests\Service;
 
-use App\DTO\Request\FilterTransactionRequest;
-use App\Entity\Customer;
-use App\Entity\Transaction;
-use App\Exception\TransactionNotFoundException;
-use App\Repository\TransactionRepository;
-use App\Service\TransactionService;
+use App\Domain\Customer\Customer;
+use App\Domain\Transaction\Transaction;
+use App\Domain\Transaction\TransactionRepositoryInterface;
+use App\Domain\Transaction\Exception\TransactionNotFoundException;
+use App\Application\Transaction\Command\CreateTransactionCommand;
+use App\Application\Transaction\Command\CreateTransactionHandler;
+use App\Application\Transaction\Command\UpdateTransactionCommand;
+use App\Application\Transaction\Command\UpdateTransactionHandler;
+use App\Application\Transaction\Command\DeleteTransactionCommand;
+use App\Application\Transaction\Command\DeleteTransactionHandler;
+use App\Application\Transaction\Query\GetTransactionListQuery;
+use App\Application\Transaction\DTO\FilterTransactionRequest;
+use App\Infrastructure\Query\DoctrineTransactionQuery;
+use App\Infrastructure\Query\DoctrineTransactionListQuery;
 use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use PHPUnit\Framework\TestCase;
 
 class TransactionServiceTest extends TestCase
 {
+    private TransactionRepositoryInterface $transactionRepo;
     private EntityManagerInterface $em;
-    private TransactionRepository $transactionRepo;
-    private TransactionService $transactionService;
+
+    private CreateTransactionHandler $createHandler;
+    private UpdateTransactionHandler $updateHandler;
+    private DeleteTransactionHandler $deleteHandler;
+
+    private DoctrineTransactionQuery $getTransactionQuery;
+    private DoctrineTransactionListQuery $getTransactionListQuery;
 
     protected function setUp(): void
     {
+        $this->transactionRepo = $this->createMock(TransactionRepositoryInterface::class);
         $this->em = $this->createMock(EntityManagerInterface::class);
-        $this->transactionRepo = $this->createMock(TransactionRepository::class);
 
-        $this->transactionService = new TransactionService(
-            $this->em,
-            $this->transactionRepo
-        );
+        $this->createHandler = new CreateTransactionHandler($this->transactionRepo);
+        $this->updateHandler = new UpdateTransactionHandler($this->transactionRepo);
+        $this->deleteHandler = new DeleteTransactionHandler($this->transactionRepo);
+
+        $this->getTransactionQuery = new DoctrineTransactionQuery($this->em);
+        $this->getTransactionListQuery = new DoctrineTransactionListQuery($this->em);
     }
 
     private function setEntityId(object $entity, int $id): void
@@ -43,16 +60,16 @@ class TransactionServiceTest extends TestCase
         $this->setEntityId($customer, 1);
         $amount = 100.50;
 
-        $this->em->expects($this->once())
-            ->method('persist')
+        $command = new CreateTransactionCommand($customer, $amount);
+
+        $this->transactionRepo->expects($this->once())
+            ->method('save')
             ->with($this->isInstanceOf(Transaction::class))
             ->willReturnCallback(function (Transaction $transaction) {
                 $this->setEntityId($transaction, 123);
             });
 
-        $this->em->expects($this->once())->method('flush');
-
-        $response = $this->transactionService->createTransaction($customer, $amount);
+        $response = ($this->createHandler)($command);
 
         $this->assertEquals(1, $response->total);
         $this->assertCount(1, $response->transactions);
@@ -73,12 +90,18 @@ class TransactionServiceTest extends TestCase
         $transaction->setAmount(50.0);
         $transaction->setDate(new \DateTimeImmutable());
 
-        $this->transactionRepo->expects($this->once())
+        $repositoryMock = $this->createMock(EntityRepository::class);
+        $this->em->expects($this->once())
+            ->method('getRepository')
+            ->with(Transaction::class)
+            ->willReturn($repositoryMock);
+
+        $repositoryMock->expects($this->once())
             ->method('findOneBy')
-            ->with(['customer' => $customer, 'id' => $transactionId])
+            ->with(['id' => $transactionId, 'customer' => $customer])
             ->willReturn($transaction);
 
-        $response = $this->transactionService->getTransaction($customer, $transactionId);
+        $response = $this->getTransactionQuery->getTransaction($customer, $transactionId);
 
         $this->assertEquals(1, $response->total);
         $this->assertCount(1, $response->transactions);
@@ -92,13 +115,19 @@ class TransactionServiceTest extends TestCase
         $customer = new Customer();
         $transactionId = 999;
 
-        $this->transactionRepo->expects($this->once())
+        $repositoryMock = $this->createMock(EntityRepository::class);
+        $this->em->expects($this->once())
+            ->method('getRepository')
+            ->with(Transaction::class)
+            ->willReturn($repositoryMock);
+
+        $repositoryMock->expects($this->once())
             ->method('findOneBy')
             ->willReturn(null);
 
         $this->expectException(TransactionNotFoundException::class);
 
-        $this->transactionService->getTransaction($customer, $transactionId);
+        $this->getTransactionQuery->getTransaction($customer, $transactionId);
     }
 
     public function testChangeAmountSuccess(): void
@@ -114,13 +143,18 @@ class TransactionServiceTest extends TestCase
         $transaction->setAmount(50.0);
         $transaction->setDate(new \DateTimeImmutable());
 
+        $command = new UpdateTransactionCommand($customer, $transactionId, $newAmount);
+
         $this->transactionRepo->expects($this->once())
-            ->method('findOneBy')
+            ->method('findByIdAndCustomer')
+            ->with($transactionId, $customer)
             ->willReturn($transaction);
 
-        $this->em->expects($this->once())->method('flush');
+        $this->transactionRepo->expects($this->once())
+            ->method('save')
+            ->with($transaction);
 
-        $response = $this->transactionService->changeAmount($customer, $transactionId, $newAmount);
+        $response = ($this->updateHandler)($command);
 
         $this->assertEquals(75.00, $transaction->getAmount());
         $this->assertEquals(1, $response->total);
@@ -134,15 +168,18 @@ class TransactionServiceTest extends TestCase
         $transactionId = 42;
 
         $transaction = new Transaction();
+        $command = new DeleteTransactionCommand($customer, $transactionId);
 
         $this->transactionRepo->expects($this->once())
-            ->method('findOneBy')
+            ->method('findByIdAndCustomer')
+            ->with($transactionId, $customer)
             ->willReturn($transaction);
 
-        $this->em->expects($this->once())->method('remove')->with($transaction);
-        $this->em->expects($this->once())->method('flush');
+        $this->transactionRepo->expects($this->once())
+            ->method('remove')
+            ->with($transaction);
 
-        $response = $this->transactionService->removeTransaction($customer, $transactionId);
+        $response = ($this->deleteHandler)($command);
 
         $this->assertEquals(0, $response->total);
         $this->assertEmpty($response->transactions);
@@ -152,31 +189,39 @@ class TransactionServiceTest extends TestCase
     {
         $customer = new Customer();
         $this->setEntityId($customer, 1);
-        
-        $filter = new FilterTransactionRequest(
-            date: null,
+
+        $query = new GetTransactionListQuery(
+            customer: $customer,
             amount: 100.0,
+            date: null,
             page: 1,
             limit: 10
         );
 
         $qb = $this->createMock(QueryBuilder::class);
         $countQb = $this->createMock(QueryBuilder::class);
-        $query = $this->createMock(AbstractQuery::class);
+        $ormQuery = $this->createMock(AbstractQuery::class);
         $countQuery = $this->createMock(AbstractQuery::class);
 
-        $this->transactionRepo->expects($this->once())
+        $this->em->expects($this->once())
             ->method('createQueryBuilder')
-            ->with('t')
             ->willReturn($qb);
 
-        // Mock method chain for main QB
+                // Mock method chain for main QB
+        $qb->expects($this->exactly(2))
+            ->method('select')
+            ->willReturnCallback(function ($arg) use ($qb, $countQb) {
+                if ($arg === 't') {
+                    return $qb;
+                }
+                return $countQb;
+            });
+        $qb->expects($this->once())->method('from')->with(Transaction::class, 't')->willReturnSelf();
         $qb->expects($this->once())->method('where')->with('t.customer = :customer')->willReturnSelf();
         $qb->expects($this->atLeastOnce())->method('setParameter')->willReturnSelf();
         $qb->expects($this->once())->method('andWhere')->with('t.amount = :amount')->willReturnSelf();
-        
+
         // select is called on $countQb (which is cloned from $qb)
-        $qb->expects($this->once())->method('select')->with('COUNT(t.id)')->willReturn($countQb);
         $countQb->expects($this->once())->method('getQuery')->willReturn($countQuery);
         $countQuery->expects($this->once())->method('getSingleScalarResult')->willReturn(5);
 
@@ -184,7 +229,7 @@ class TransactionServiceTest extends TestCase
         $qb->expects($this->once())->method('setFirstResult')->with(0)->willReturnSelf();
         $qb->expects($this->once())->method('setMaxResults')->with(10)->willReturnSelf();
         $qb->expects($this->once())->method('orderBy')->with('t.date', 'ASC')->willReturnSelf();
-        $qb->expects($this->once())->method('getQuery')->willReturn($query);
+        $qb->expects($this->once())->method('getQuery')->willReturn($ormQuery);
 
         $transaction = new Transaction();
         $this->setEntityId($transaction, 42);
@@ -192,9 +237,9 @@ class TransactionServiceTest extends TestCase
         $transaction->setAmount(100.0);
         $transaction->setDate(new \DateTimeImmutable());
 
-        $query->expects($this->once())->method('getResult')->willReturn([$transaction]);
+        $ormQuery->expects($this->once())->method('getResult')->willReturn([$transaction]);
 
-        $response = $this->transactionService->getTransactionByFilter($customer, $filter);
+        $response = $this->getTransactionListQuery->getList($query);
 
         $this->assertEquals(5, $response->total);
         $this->assertCount(1, $response->transactions);

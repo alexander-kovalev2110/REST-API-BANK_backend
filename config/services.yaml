@@ -5,23 +5,41 @@ services:
 
     App\:
         resource: '../src/'
-        exclude: '../src/{DependencyInjection,Entity,Tests,Kernel.php}'
+        exclude: '../src/{DependencyInjection,Domain/Customer/Customer.php,Domain/Transaction/Transaction.php,Tests,Kernel.php}'
 
-    App\Service\:
-        resource: '../src/Service/'
+    App\Api\Controller\:
+        resource: '../src/Api/Controller/'
         tags: ['controller.service_arguments']
-    
-    App\Service\ValidatorService:
-        arguments:
-            $validator: '@validator'
 
     App\EventListener\ApiExceptionListener:
         tags:
             - { name: kernel.event_listener, event: kernel.exception }    
 
-    App\ArgumentResolver\FilterTransactionRequestResolver:
+    App\Api\ArgumentResolver\FilterTransactionRequestResolver:
         tags: ['controller.argument_value_resolver']
 
-    App\ArgumentResolver\CustomerValueResolver:
+    App\Api\ArgumentResolver\CustomerValueResolver:
         tags:
             - { name: controller.argument_value_resolver, priority: 50 }
+
+    App\Api\ArgumentResolver\RequestPayloadResolver:
+        tags: ['controller.argument_value_resolver']
+
+    # Bindings (Ports -> Adapters)
+    App\Domain\Customer\CustomerRepositoryInterface:
+        alias: App\Infrastructure\Repository\DoctrineCustomerRepository
+
+    App\Domain\Transaction\TransactionRepositoryInterface:
+        alias: App\Infrastructure\Repository\DoctrineTransactionRepository
+
+    App\Application\Customer\Service\PasswordHasherInterface:
+        alias: App\Infrastructure\Security\SymfonyPasswordHasher
+
+    App\Application\Customer\Service\TokenServiceInterface:
+        alias: App\Infrastructure\Security\JWTTokenService
+
+    App\Application\Transaction\Service\TransactionQueryInterface:
+        alias: App\Infrastructure\Query\DoctrineTransactionQuery
+
+    App\Application\Transaction\Service\TransactionListQueryInterface:
+        alias: App\Infrastructure\Query\DoctrineTransactionListQuery
