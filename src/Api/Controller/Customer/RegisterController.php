@@ -10,13 +10,14 @@ use App\Infrastructure\Bus\CommandBus;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
 
 final class RegisterController extends AbstractController
 {
     #[Route('/customers/register', name: 'create_customer', methods: ['POST'])]
     public function __invoke(
-        RegisterRequest $request,
+        #[MapRequestPayload] RegisterRequest $request,
         CommandBus $commandBus,
         TokenServiceInterface $tokenService
     ): JsonResponse {

@@ -5,7 +5,7 @@ services:
 
     App\:
         resource: '../src/'
-        exclude: '../src/{DependencyInjection,Domain/Customer/Customer.php,Domain/Transaction/Transaction.php,Tests,Kernel.php}'
+        exclude: '../src/{DependencyInjection,Domain/Customer/Customer.php,Domain/Transaction/Transaction.php,Application/Customer/DTO,Application/Transaction/DTO,Tests,Kernel.php}'
 
     App\Api\Controller\:
         resource: '../src/Api/Controller/'
@@ -14,16 +14,6 @@ services:
     App\EventListener\ApiExceptionListener:
         tags:
             - { name: kernel.event_listener, event: kernel.exception }    
-
-    App\Api\ArgumentResolver\FilterTransactionRequestResolver:
-        tags: ['controller.argument_value_resolver']
-
-    App\Api\ArgumentResolver\CustomerValueResolver:
-        tags:
-            - { name: controller.argument_value_resolver, priority: 50 }
-
-    App\Api\ArgumentResolver\RequestPayloadResolver:
-        tags: ['controller.argument_value_resolver']
 
     # Bindings (Ports -> Adapters)
     App\Domain\Customer\CustomerRepositoryInterface:
