@@ -45,15 +45,12 @@ FE → Kernel → Security → Argument Resolver → Controller → QueryBus →
     *   Resolving the authenticated `Customer` entity.
     *   Flow: `FE → Kernel → Security`
 
-### 3. Argument Resolver Layer
-*   **Purpose:** Automatically deserializes the incoming HTTP request body and query parameters into structured DTO models.
-*   **Responsibilities:**
-    *   Parse raw HTTP input.
-    *   Hydrate and validate the Request DTO.
-    *   Throw validation errors immediately on invalid payload structure (returning `400 Bad Request` with structured validation messages).
-*   **Structure:**
-    *   [RequestPayloadResolver.php](file:///d:/KA/tests/github/REST-API-BANK_backend/src/Api/ArgumentResolver/RequestPayloadResolver.php)
-    *   [FilterTransactionRequestResolver.php](file:///d:/KA/tests/github/REST-API-BANK_backend/src/Api/ArgumentResolver/FilterTransactionRequestResolver.php)
+### 3. Native Attribute Mapping Layer (Symfony 7)
+*   **Purpose:** Automatically binds, deserializes, and validates HTTP request data (body, query parameters, and authenticated user) directly into controller arguments.
+*   **Key Attributes Used:**
+    *   `#[MapRequestPayload]` — deserializes and validates JSON request bodies into DTO models.
+    *   `#[MapQueryString]` — maps and validates GET query parameters into search/filter DTOs.
+    *   `#[CurrentUser]` — extracts the currently authenticated user from Symfony Security.
 
 ### 4. DTO Layer (Request Models)
 *   **Purpose:** Strongly typed input definitions protecting application boundaries.
@@ -118,8 +115,8 @@ FE → Kernel → Security → Argument Resolver → Controller → QueryBus →
 
 ## Exception Handling & Validation
 
-1.  **Request Payload Validation:**
-    Occurs at the resolver stage via [RequestPayloadResolver](file:///d:/KA/tests/github/REST-API-BANK_backend/src/Api/ArgumentResolver/RequestPayloadResolver.php). Violations return a `400 Bad Request` JSON payload containing errors.
+1.  **Request Payload & Query Validation:**
+    Occurs automatically via Symfony's native attributes (`#[MapRequestPayload]` and `#[MapQueryString]`). Any validation violations are globally caught by [ApiExceptionListener](file:///d:/KA/tests/github/REST-API-BANK_backend/src/EventListener/ApiExceptionListener.php) and formatted into a structured `400 Bad Request` JSON response.
 2.  **Domain Exception Handling:**
     Domain-level exceptions (e.g. `CustomerNotFoundException`, `TransactionNotFoundException`) extend [DomainException](file:///d:/KA/tests/github/REST-API-BANK_backend/src/Domain/Exception/DomainException.php) which defines the target HTTP status. They are globally intercepted by [ApiExceptionListener](file:///d:/KA/tests/github/REST-API-BANK_backend/src/EventListener/ApiExceptionListener.php) and converted to consistent JSON responses.
 
@@ -131,7 +128,6 @@ FE → Kernel → Security → Argument Resolver → Controller → QueryBus →
 src/
   Api/                      # Primary (Driving) Adapters
     Controller/             # HTTP Entry Points
-    ArgumentResolver/       # Custom parameter binding & validation resolvers
   Domain/                   # Core business logic & entities
     Customer/               # Customer domain entity, interfaces, exceptions
     Transaction/            # Transaction domain entity, interfaces, exceptions
