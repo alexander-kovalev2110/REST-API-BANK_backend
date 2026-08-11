@@ -145,6 +145,44 @@ src/
 
 ---
 
+## Running Tests
+
+The test suite is built using **PHPUnit** and covers both Customer and Transaction logic.
+
+### Commands to Run Tests
+
+#### On Linux / macOS / Git Bash:
+*   Run all tests:
+    ```bash
+    ./vendor/bin/phpunit
+    ```
+*   Run a specific test class:
+    ```bash
+    ./vendor/bin/phpunit tests/Service/CustomerServiceTest.php
+    ```
+
+#### On Windows (Command Prompt - CMD):
+*   Run all tests:
+    ```cmd
+    vendor\bin\phpunit
+    ```
+*   Run a specific test class:
+    ```cmd
+    vendor\bin\phpunit tests/Service/CustomerServiceTest.php
+    ```
+
+#### On Windows (PowerShell):
+*   Run all tests:
+    ```powershell
+    .\vendor\bin\phpunit
+    ```
+*   Run a specific test class:
+    ```powershell
+    .\vendor\bin\phpunit tests/Service/CustomerServiceTest.php
+    ```
+
+---
+
 ## Core Philosophy
 
 Backend is responsible for:
