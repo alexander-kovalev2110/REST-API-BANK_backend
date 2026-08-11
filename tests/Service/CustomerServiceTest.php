@@ -39,11 +39,11 @@ class CustomerServiceTest extends TestCase
 
     public function testCreateCustomerSuccess(): void
     {
-        $command = new RegisterCustomerCommand('john_doe', 'password123');
+        $command = new RegisterCustomerCommand('alex_k', 'password');
 
         $this->customerRepo->expects($this->once())
             ->method('findByName')
-            ->with('john_doe')
+            ->with('alex_k')
             ->willReturn(null);
 
         $this->passwordHasher->expects($this->once())
@@ -56,13 +56,13 @@ class CustomerServiceTest extends TestCase
         $customer = ($this->registerHandler)($command);
 
         $this->assertInstanceOf(Customer::class, $customer);
-        $this->assertEquals('john_doe', $customer->getName());
+        $this->assertEquals('alex_k', $customer->getName());
         $this->assertEquals('hashed_password', $customer->getPassword());
     }
 
     public function testCreateCustomerAlreadyExists(): void
     {
-        $command = new RegisterCustomerCommand('existing_user', 'password123');
+        $command = new RegisterCustomerCommand('existing_user', 'password');
         $existingCustomer = new Customer();
 
         $this->customerRepo->expects($this->once())
@@ -77,18 +77,18 @@ class CustomerServiceTest extends TestCase
 
     public function testLoginSuccess(): void
     {
-        $command = new LoginCustomerCommand('john_doe', 'password123');
+        $command = new LoginCustomerCommand('alex_k', 'password');
         $customer = new Customer();
-        $customer->setName('john_doe');
+        $customer->setName('alex_k');
 
         $this->customerRepo->expects($this->once())
             ->method('findByName')
-            ->with('john_doe')
+            ->with('alex_k')
             ->willReturn($customer);
 
         $this->passwordHasher->expects($this->once())
             ->method('isValid')
-            ->with($customer, 'password123')
+            ->with($customer, 'password')
             ->willReturn(true);
 
         $result = ($this->loginHandler)($command);
@@ -112,12 +112,12 @@ class CustomerServiceTest extends TestCase
 
     public function testLoginInvalidCredentials(): void
     {
-        $command = new LoginCustomerCommand('john_doe', 'wrong_password');
+        $command = new LoginCustomerCommand('alex_k', 'wrong_password');
         $customer = new Customer();
 
         $this->customerRepo->expects($this->once())
             ->method('findByName')
-            ->with('john_doe')
+            ->with('alex_k')
             ->willReturn($customer);
 
         $this->passwordHasher->expects($this->once())
